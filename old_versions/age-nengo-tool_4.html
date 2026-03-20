@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>総合計算ツール v4.1</title>
+    <style>
+        :root {
+            --main-bg: #e0f2f1;
+            --card-bg: #ffffff;
+            --accent-color: #546e7a;
+            --result-color: #0288d1;
+            --note-color: #d32f2f;
+            --border-color: #b2dfdb;
+            --cat-paw: #8d6e63;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            background: var(--main-bg);
+            padding: 25px 20px;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            width: 360px;
+            box-sizing: border-box; /* コンテナ自体もはみ出し防止 */
+            position: relative;
+        }
+        
+        .cat-icon {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            font-size: 1.1rem;
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+        
+        .header-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-top: 5px;
+        }
+
+        h1 { font-size: 1.4rem; color: #37474f; margin: 0; }
+        
+        .clear-btn {
+            position: absolute;
+            right: 20px;
+            top: 15px;
+            background: #fff;
+            border: 1px solid var(--border-color);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            color: var(--accent-color);
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: 0.2s;
+        }
+        
+        .card {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 16px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+            box-sizing: border-box;
+        }
+
+        h2 { 
+            font-size: 0.9rem; 
+            color: var(--accent-color); 
+            margin: 0 0 12px 0; 
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        h2::before { content: "🐾"; font-size: 0.8rem; color: var(--cat-paw); }
+        
+        .input-group { display: flex; flex-direction: column; gap: 8px; }
+        .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        
+        label { font-size: 0.75rem; color: #78909c; font-weight: bold; }
+        
+        select, input {
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            background: #fafafa;
+            box-sizing: border-box; /* ここが重要：枠線を含めて幅計算する */
+        }
+        
+        /* 日付入力の幅をカード内に収める設定 */
+        input[type="date"] {
+            width: 100%;
+            max-width: 100%;
+            cursor: pointer;
+        }
+        
+        input[type="number"] { width: 80px; }
+
+        .base-date-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+        }
+        
+        #baseDate { flex: 1; min-width: 0; }
+        #baseDateWareki { font-size: 0.85rem; color: var(--accent-color); font-weight: bold; white-space: nowrap; }
+
+        .result-container {
+            margin-top: 12px;
+            padding-top: 10px;
+            border-top: 1px dashed #eee;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .result-text {
+            font-size: 1.4rem;
+            color: var(--result-color);
+            font-weight: 800;
+        }
+        
+        .paw-mark { color: var(--cat-paw); font-size: 1rem; opacity: 0.6; }
+
+        .note-text {
+            font-size: 0.7rem;
+            color: var(--note-color);
+            margin-top: 4px;
+            min-height: 1em;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="cat-icon">(ΦωΦ)</div>
+    <button class="clear-btn" onclick="resetAll()">クリア</button>
+    
+    <div class="header-area">
+        <h1>総合計算ツール</h1>
+    </div>
+
+    <div class="card">
+        <h2>年齢を調べる</h2>
+        <div class="input-group">
+            <label>生年月日</label>
+            <input type="date" id="birthDate" onchange="calcAge()">
+            
+            <label>計算基準日</label>
+            <div class="base-date-container">
+                <input type="date" id="baseDate" onchange="handleBaseDateChange()">
+                <span id="baseDateWareki"></span>
+            </div>
+        </div>
+        <div class="result-container">
+            <span class="paw-mark">🐾</span>
+            <div id="ageResult" class="result-text">-- 歳</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>和暦を西暦に</h2>
+        <div class="row">
+            <select id="eraSelect" onchange="calcToSeireki()">
+                <option value="reiwa">令和</option>
+                <option value="heisei">平成</option>
+                <option value="showa">昭和</option>
+                <option value="taisho">大正</option>
+            </select>
+            <input type="number" id="warekiYear" placeholder="年" oninput="calcToSeireki()">
+            <span>年</span>
+        </div>
+        <div class="result-container">
+            <span class="paw-mark">🐾</span>
+            <div id="seirekiResult" class="result-text">西暦 ---- 年</div>
+        </div>
+        <div id="seirekiNote" class="note-text"></div>
+    </div>
+
+    <div class="card">
+        <h2>西暦を和暦に</h2>
+        <div class="row">
+            <input type="number" id="seirekiInput" placeholder="2026" oninput="calcToWareki()">
+            <span>年</span>
+        </div>
+        <div class="result-container">
+            <span class="paw-mark">🐾</span>
+            <div id="warekiResult" class="result-text">---- -- 年</div>
+        </div>
+        <div id="warekiNote" class="note-text"></div>
+    </div>
+</div>
+
+<script>
+    function getToday() { return new Date().toISOString().split('T')[0]; }
+    function getWarekiString(dateStr) {
+        if (!dateStr) return "";
+        const date = new Date(dateStr);
+        const formatter = new Intl.DateTimeFormat('ja-JP-u-ca-japanese', { era: 'long', year: 'numeric' });
+        return formatter.format(date).split('/')[0];
+    }
+    function handleBaseDateChange() {
+        const baseVal = document.getElementById('baseDate').value;
+        document.getElementById('baseDateWareki').innerText = `(${getWarekiString(baseVal)})`;
+        calcAge();
+    }
+    window.onload = function() {
+        const today = getToday();
+        document.getElementById('baseDate').value = today;
+        document.getElementById('baseDateWareki').innerText = `(${getWarekiString(today)})`;
+    };
+    function resetAll() {
+        document.getElementById('birthDate').value = "";
+        document.getElementById('warekiYear').value = "";
+        document.getElementById('seirekiInput').value = "";
+        const today = getToday();
+        document.getElementById('baseDate').value = today;
+        document.getElementById('baseDateWareki').innerText = `(${getWarekiString(today)})`;
+        document.getElementById('ageResult').innerText = "-- 歳";
+        document.getElementById('seirekiResult').innerText = "西暦 ---- 年";
+        document.getElementById('seirekiNote').innerText = "";
+        document.getElementById('warekiResult').innerText = "---- -- 年";
+        document.getElementById('warekiNote').innerText = "";
+    }
+    function calcAge() {
+        const birthVal = document.getElementById('birthDate').value;
+        const baseVal = document.getElementById('baseDate').value;
+        const resultArea = document.getElementById('ageResult');
+        if (!birthVal || !baseVal) { resultArea.innerText = "-- 歳"; return; }
+        const birth = new Date(birthVal); const base = new Date(baseVal);
+        let age = base.getFullYear() - birth.getFullYear();
+        const m = base.getMonth() - birth.getMonth();
+        if (m < 0 || (m === 0 && base.getDate() < birth.getDate())) { age--; }
+        resultArea.innerText = age >= 0 ? `${age} 歳` : "未来の日付です";
+    }
+    function calcToSeireki() {
+        const era = document.getElementById('eraSelect').value;
+        const year = parseInt(document.getElementById('warekiYear').value);
+        const resultArea = document.getElementById('seirekiResult');
+        const noteArea = document.getElementById('seirekiNote');
+        if (!year) { resultArea.innerText = "西暦 ---- 年"; noteArea.innerText = ""; return; }
+        let seireki = 0; let note = "";
+        if (era === 'reiwa') { seireki = year + 2018; if (year === 1) note = "※5月1日から令和元年"; }
+        else if (era === 'heisei') { seireki = year + 1988; if (year === 1) note = "※1月8日から平成元年"; if (year === 31) note = "※4月30日まで平成31年"; }
+        else if (era === 'showa') { seireki = year + 1925; if (year === 1) note = "※12月25日から昭和元年"; if (year === 64) note = "※1月7日まで昭和64年"; }
+        else if (era === 'taisho') { seireki = year + 1911; if (year === 15) note = "※12月24日まで大正15年"; }
+        resultArea.innerText = `西暦 ${seireki} 年`; noteArea.innerText = note;
+    }
+    function calcToWareki() {
+        const year = parseInt(document.getElementById('seirekiInput').value);
+        const resultArea = document.getElementById('warekiResult');
+        const noteArea = document.getElementById('warekiNote');
+        if (!year) { resultArea.innerText = "---- -- 年"; noteArea.innerText = ""; return; }
+        let result = ""; let note = "";
+        if (year > 2019) { result = `令和 ${year - 2018} 年`; }
+        else if (year === 2019) { result = "平成31年 / 令和元年"; note = "※4月30日まで平成、5月1日から令和"; }
+        else if (year > 1989) { result = `平成 ${year - 1988} 年`; }
+        else if (year === 1989) { result = "昭和64年 / 平成元年"; note = "※1月7日まで昭和、1月8日から平成"; }
+        else if (year > 1926) { result = `昭和 ${year - 1925} 年`; }
+        else if (year === 1926) { result = "大正15年 / 昭和元年"; note = "※12月24日まで大正、12月25日から昭和"; }
+        else if (year >= 1912) { result = `大正 ${year - 1911} 年`; }
+        else { result = "大正以前です"; }
+        resultArea.innerText = result; noteArea.innerText = note;
+    }
+</script>
+</body>
+</html>
